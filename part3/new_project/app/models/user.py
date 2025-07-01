@@ -4,14 +4,28 @@ import re
 class User(BaseModel):
     emails = set()
 
-    def __init__(self, first_name, last_name, email, is_admin=False):
+    def __init__(self, **kwargs):
         super().__init__()
-        self.first_name = first_name
-        self.last_name = last_name
-        self.email = email
-        self.is_admin = is_admin
+        self.first_name = kwargs.get('first_name')
+        self.last_name = kwargs.get('last_name')
+        self.email = kwargs.get('email')
+        self.is_admin = kwargs.get('is_admin', False)
         self.places = []
         self.reviews = []
+        self.password = None
+        password = kwargs.get('password')
+        if password:
+            self.hash_password(password)
+
+    def hash_password(self, password):
+        """hash le mot de passe avant de le poser dans la base de donnees"""
+        from app import bcrypt
+        self.password = bcrypt.generate_password_hash(password).decode('utf-8')
+
+    def verify_password(self, password):
+        """verifie si le mot de passe fourni correspond au mot de passe hache"""
+        from app import bcrypt
+        return bcrypt.check_password_hash(self.password, password)
     
     @property
     def first_name(self):

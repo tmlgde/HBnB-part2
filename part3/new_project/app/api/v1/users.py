@@ -7,7 +7,8 @@ api = Namespace('users', description='User operations')
 user_model = api.model('User', {
     'first_name': fields.String(required=True, description='First name of the user'),
     'last_name': fields.String(required=True, description='Last name of the user'),
-    'email': fields.String(required=True, description='Email of the user')
+    'email': fields.String(required=True, description='Email of the user'),
+    'password': fields.String(required=True, description='Password of the user')
 })
 
 @api.route('/')
@@ -26,7 +27,11 @@ class UserList(Resource):
             return {'error': 'Email already registered'}, 409
 
         try:
+            plain_password = user_data.pop('password')
             new_user = facade.create_user(user_data)
+            new_user.hash_password(plain_password)
+            user_dict = new_user.to_dict()
+            user_dict.pop('password', None)
             return new_user.to_dict(), 201
         except Exception as e:
             return {'error': str(e)}, 400
@@ -46,7 +51,9 @@ class UserResource(Resource):
         user = facade.get_user(user_id)
         if not user:
             return {'error': 'User not found'}, 404
-        return user.to_dict(), 200
+        user_dict = user.to_dict()
+        user_dict.pop('password', None)
+        return user_dict, 200
 
     @api.expect(user_model)
     @api.response(200, 'User updated successfully')
