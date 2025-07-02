@@ -8,9 +8,11 @@ class Config:
 class DevelopmentConfig(Config):
     DEBUG = True
     ENV = "development"
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///hbnb_dev.db'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 config = {
-        'development': DevelopmentConfig,
-        'production': DevelopmentConfig,
-        'default': DevelopmentConfig
-        }
+    'development': DevelopmentConfig,
+    'production': DevelopmentConfig,
+    'default': DevelopmentConfig
+}
