@@ -26,11 +26,11 @@ class User(BaseModel):
         """verifie si le mot de passe fourni correspond au mot de passe hache"""
         from app import bcrypt
         return bcrypt.check_password_hash(self.password, password)
-    
+
     @property
     def first_name(self):
         return self.__first_name
-    
+
     @first_name.setter
     def first_name(self, value):
         if not isinstance(value, str):
@@ -69,7 +69,7 @@ class User(BaseModel):
     @property
     def is_admin(self):
         return self.__is_admin
-    
+
     @is_admin.setter
     def is_admin(self, value):
         if not isinstance(value, bool):
@@ -77,15 +77,15 @@ class User(BaseModel):
         self.__is_admin = value
 
     def add_place(self, place):
-        """Add an amenity to the place."""
+        """Ajoute un lieu associé à l'utilisateur"""
         self.places.append(place)
 
     def add_review(self, review):
-        """Add an amenity to the place."""
+        """Ajoute un avis associé à l'utilisateur"""
         self.reviews.append(review)
 
     def delete_review(self, review):
-        """Add an amenity to the place."""
+        """Supprime un avis de l'utilisateur"""
         self.reviews.remove(review)
 
     def to_dict(self):
