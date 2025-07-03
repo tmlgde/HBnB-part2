@@ -69,7 +69,7 @@ class ReviewResource(Resource):
     @jwt_required()
     def put(self, review_id):
         """Update a review's information"""
-        current_user_id = jwt_identity()
+        current_user_id = get_jwt_identity()
         review = facade.get_review(review_id)
 
         if not review:
