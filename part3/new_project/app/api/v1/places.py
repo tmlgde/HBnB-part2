@@ -1,3 +1,4 @@
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_restx import Namespace, Resource, fields
 from app.services import facade
 
@@ -33,17 +34,22 @@ class PlaceList(Resource):
     @api.expect(place_model)
     @api.response(201, 'Place successfully created')
     @api.response(400, 'Invalid input data')
+    @jwt_required()
     def post(self):
         """Register a new place"""
         place_data = api.payload
-        owner = place_data.get('owner_id', None)
+        current_user_id = get_jwt_identity()
+        place_data['owner_id'] = current_user_id 
 
-        if owner is None or len(owner) == 0:
-            return {'error': 'Invalid input data.'}, 400
+        place_data.setdefault('price', 0)
+        place_data.setdefault('latitude', 0.0)
+        place_data.setdefault('longitude', 0.0)
+        place_data.setdefault('amenities', [])
 
-        user = facade.user_repo.get_by_attribute('id', owner)
+        user = facade.user_repo.get_by_attribute("id", current_user_id)
         if not user:
-            return {'error': 'Invalid input data'}, 400
+            return {'error': 'User not found for this token'}, 400
+
         try:
             new_place = facade.create_place(place_data)
             return new_place.to_dict(), 201
@@ -71,12 +77,18 @@ class PlaceResource(Resource):
     @api.response(200, 'Place updated successfully')
     @api.response(404, 'Place not found')
     @api.response(400, 'Invalid input data')
+    @api.response(403, 'Unauthorized action')
+    @jwt_required()
     def put(self, place_id):
         """Update a place's information"""
-        place_data = api.payload
+        current_user_id = get_jwt_identity()
         place = facade.get_place(place_id)
+        
         if not place:
             return {'error': 'Place not found'}, 404
+        if place.owner.id != current_user_id:
+            return {'error': 'Unauthorized action'}, 403
+        place_data = api.payload
         try:
             facade.update_place(place_id, place_data)
             return {'message': 'Place updated successfully'}, 200

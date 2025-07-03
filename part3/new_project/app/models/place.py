@@ -70,6 +70,10 @@ class Place(BaseModel):
             raise TypeError("Owner must be a user instance")
         self.__owner = value
 
+    @property
+    def owner_id(self):
+        return self.owner.id
+
     def add_review(self, review):
         """Add a review to the place."""
         self.reviews.append(review)
