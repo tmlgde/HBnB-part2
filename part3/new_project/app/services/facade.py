@@ -105,6 +105,12 @@ class HBnBFacade:
         if not place:
             raise KeyError('Place not found')
         return place.reviews
+        
+    def get_reviews_by_place_and_user(self, place_id, user_id):
+        place = self.place_repo.get(place_id)
+        if not place:
+            raise KeyError("Place not found")
+        return [review for review in place.reviews if review.user.id == user_id]
 
     def update_review(self, review_id, review_data):
         self.review_repo.update(review_id, review_data)
