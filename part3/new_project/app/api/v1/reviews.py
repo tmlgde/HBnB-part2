@@ -7,9 +7,9 @@ api = Namespace('reviews', description='Review operations')
 # Define the review model for input validation and documentation
 review_model = api.model('Review', {
     'text': fields.String(required=True, description='Text of the review'),
-    'rating': fields.Integer(required=True, description='Rating of the place (1-5)'),
-    'user_id': fields.String(required=True, description='ID of the user'),
-    'place_id': fields.String(required=True, description='ID of the place')
+    'rating': fields.Integer(required=False, description='Rating of the place (1-5)'),
+    'place_id': fields.String(required=True, description='ID of the place'),
+    'user_id': fields.String(required=False, description='ID of the user (from JWT)')
 })
 
 @api.route('/')
@@ -23,6 +23,9 @@ class ReviewList(Resource):
         current_user_id = get_jwt_identity()
         review_data = api.payload
         place = facade.get_place(review_data['place_id'])
+
+        if 'rating' not in review_data:
+            review_data['rating'] = 5
 
         if not place:
             return {'error': 'Place not found'}, 400
