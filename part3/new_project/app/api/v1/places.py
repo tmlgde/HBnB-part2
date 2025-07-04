@@ -78,7 +78,14 @@ class PlaceResource(Resource):
         place = facade.get_place(place_id)
         if not place:
             return {'error': 'Place not found'}, 404
-        return place.to_dict_list(), 200
+        return {
+            "id": place.id,
+            "title": place.title,
+            "description": place.description,
+            "price": place.price,
+            "latitude": place.latitude,
+            "longitude": place.longitude
+        }, 200
 
     @api.expect(place_model)
     @api.response(200, 'Place updated successfully')
