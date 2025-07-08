@@ -1,51 +1,41 @@
-#!/usr/bin/python3
-"""
-Admin endpoints for managing users and amenities
-Only accessible to admin users (RBAC)
-*Exigé par l'énoncé - Tâche 5 : Implement Administrator Access Endpoints
-"""
-
-from flask_restx import Namespace, Resource
+from flask_restx import Namespace, Resource, fields
 from flask_jwt_extended import jwt_required, get_jwt
 from flask import request
-from models.user import User
-from models.amenity import Amenity
-from facade import HBnBFacade
+from app.services import facade
 
 api = Namespace('admin', description='Admin operations')
-facade = HBnBFacade()
 
+user_in = api.model('UserIn', {
+    'email': fields.String(required=True),
+    'first_name': fields.String,
+    'last_name': fields.String,
+    'password': fields.String,
+    'is_admin': fields.Boolean
+})
 
-# Exigé par l'énoncé - Endpoint POST /users/ (Admin only)
+# -- CREATE USER --
 @api.route('/users/')
 class AdminUserCreate(Resource):
+    @api.expect(user_in)
     @jwt_required()
     def post(self):
-        """
-        Create a new user (admin only)
-        *Exigé par l'énoncé - Tâche 5
-        """
-
-        # Vérifie les droits admin via le JWT
-        claims = get_jwt()
-        if not claims.get('is_admin'):
+        if not get_jwt().get('is_admin'):
             return {'error': 'Admin privileges required'}, 403
+        try:
+            user = facade.create_user(request.get_json())
+            return user.to_dict(), 201
+        except ValueError as e:
+            return {'error': str(e)}, 400
 
-        # Récupère les données envoyées en JSON
-        user_data = request.get_json()
-        email = user_data.get('email')
-
-        # Vérifie que l'email est présent
-        if not email:
-            return {'error': 'Email is required'}, 400
-
-        # Vérifie si l'email est déjà utilisé
-        existing_user = facade.get_user_by_email(email)
-        if existing_user:
-            return {'error': 'Email already registered'}, 400
-
-        # Crée un nouvel utilisateur via la façade
-        new_user = facade.create_user(user_data)
-
-        # Retourne les informations du nouvel utilisateur
-        return new_user.to_dict(), 201
+# -- UPDATE USER --
+@api.route('/users/<string:user_id>')
+class AdminUserModify(Resource):
+    @jwt_required()
+    def put(self, user_id):
+        if not get_jwt().get('is_admin'):
+            return {'error': 'Admin privileges required'}, 403
+        try:
+            user = facade.update_user(user_id, request.get_json())
+            return user.to_dict(), 200
+        except (KeyError, ValueError) as e:
+            return {'error': str(e)}, 400
