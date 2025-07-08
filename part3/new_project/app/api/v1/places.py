@@ -143,4 +143,3 @@ class PlaceReviewList(Resource):
         if not place:
             return {'error': 'Place not found'}, 404
         return [review.to_dict() for review in place.reviews], 200
-    
