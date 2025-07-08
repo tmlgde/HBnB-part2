@@ -1,8 +1,7 @@
-from app import db
+from app.extensions import db
 from sqlalchemy.orm import validates
-from .user import User
-from .review import Review
-from .amenity import Amenity
+from .basemodel import BaseModel
+from app.extensions import db
 import uuid
 
 place_amenity = db.Table(
@@ -11,10 +10,9 @@ place_amenity = db.Table(
     db.Column('amenity_id', db.String, db.ForeignKey('amenities.id'), primary_key=True)
 )
 
-class Place(db.Model):
+class Place(BaseModel):
     __tablename__ = 'places'
 
-    id = db.Column(db.String, primary_key=True, default=lambda: str(uuid.uuid4()))
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String, nullable=True)
     price = db.Column(db.Float, nullable=False)
@@ -22,13 +20,10 @@ class Place(db.Model):
     longitude = db.Column(db.Float, nullable=False)
 
     owner_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
-    owner = db.relationship('User', backref='places')
+    owner = db.relationship('User', back_populates='places')
 
-    reviews = db.relationship('Review', backref='place', cascade="all, delete-orphan")
+    reviews = db.relationship('Review', back_populates='place', cascade="all, delete-orphan")
     amenities = db.relationship('Amenity', secondary=place_amenity, backref='places')
-
-    created_at = db.Column(db.DateTime, default=db.func.now())
-    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
 
     @validates('title')
     def validate_title(self, key, value):
@@ -47,7 +42,7 @@ class Place(db.Model):
     @validates('latitude')
     def validate_latitude(self, key, value):
         if not isinstance(value, float):
-            raise ValueError("Latitude must be a float")
+            raise TypeError("Latitude must be a float")
         if not -90 < value < 90:
             raise ValueError("Latitude must be between -90 and 90")
         return value
@@ -55,7 +50,7 @@ class Place(db.Model):
     @validates('longitude')
     def validate_longitude(self, key, value):
         if not isinstance(value, float):
-            raise ValueError("Longitude must be a float")
+            raise TypeError("Longitude must be a float")
         if not -180 < value < 180:
             raise ValueError("Longitude must be between -180 and 180")
         return value

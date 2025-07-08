@@ -1,16 +1,20 @@
-from app import db
+from app.extensions import db
 from sqlalchemy.orm import validates
 import re
+from .basemodel import BaseModel
 
-class User(db.Model):
+class User(BaseModel):
     __tablename__ = 'users'
 
-    id = db.Column(db.String, primary_key=True)
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     password = db.Column(db.String(128), nullable=False)
+
+    # Relations
+    places = db.relationship('Place', back_populates='owner', cascade="all, delete-orphan")
+    reviews = db.relationship('Review', back_populates='user', cascade="all, delete-orphan")
 
     @validates('first_name')
     def validate_first_name(self, key, value):
