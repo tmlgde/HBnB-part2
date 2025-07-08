@@ -2,6 +2,7 @@ from app.extensions import db
 from sqlalchemy.orm import validates
 import re
 from .basemodel import BaseModel
+from app.extensions import bcrypt
 
 class User(BaseModel):
     __tablename__ = 'users'
@@ -45,3 +46,18 @@ class User(BaseModel):
         if not isinstance(value, bool):
             raise TypeError("is_admin must be a boolean")
         return value
+
+    def hash_password(self, plain_password):
+        self.password = bcrypt.generate_password_hash(plain_password).decode('utf-8')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'email': self.email,
+            'is_admin': self.is_admin,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+

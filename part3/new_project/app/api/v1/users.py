@@ -22,18 +22,16 @@ class UserList(Resource):
         """Register a new user"""
         user_data = api.payload
 
-        # Simulate email uniqueness check (to be replaced by real validation with persistence)
         existing_user = facade.get_user_by_email(user_data['email'])
         if existing_user:
             return {'error': 'Email already registered'}, 409
 
         try:
-            plain_password = user_data.pop('password')
-            new_user = facade.create_user(user_data)
-            new_user.hash_password(plain_password)
+            plain_password = user_data['password']  # 🔁 pas besoin de pop ici
+            new_user = facade.create_user(user_data, plain_password)  # 👈 on passe les deux
             user_dict = new_user.to_dict()
             user_dict.pop('password', None)
-            return new_user.to_dict(), 201
+            return user_dict, 201
         except Exception as e:
             return {'error': str(e)}, 400
         
