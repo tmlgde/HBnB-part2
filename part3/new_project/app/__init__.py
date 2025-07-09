@@ -4,12 +4,17 @@ from flask_restx import Api
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
 
+from app.extensions import db, bcrypt, jwt
 from app.config import DevelopmentConfig
 from app.models import db            # ← même instance partout
 
+<<<<<<< HEAD
 # extensions
 bcrypt = Bcrypt()
 jwt    = JWTManager()
+=======
+
+>>>>>>> main
 
 def create_app(config_class=DevelopmentConfig):
     app = Flask(__name__)
@@ -17,8 +22,16 @@ def create_app(config_class=DevelopmentConfig):
 
     # init extensions
     db.init_app(app)
+<<<<<<< HEAD
     bcrypt.init_app(app)
     jwt.init_app(app)
+=======
+    jwt.init_app(app
+            )
+    from app.models import user
+    with app.app_context():
+        db.create_all()
+>>>>>>> main
 
     # API v1
     api = Api(app, title='HBnB API', version='1.0')

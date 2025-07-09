@@ -1,97 +1,63 @@
-from .basemodel import BaseModel
+from app.extensions import db
+from sqlalchemy.orm import validates
 import re
+from .basemodel import BaseModel
+from app.extensions import bcrypt
 
 class User(BaseModel):
-    emails = set()
+    __tablename__ = 'users'
 
-    def __init__(self, **kwargs):
-        super().__init__()
-        self.first_name = kwargs.get('first_name')
-        self.last_name = kwargs.get('last_name')
-        self.email = kwargs.get('email')
-        self.is_admin = kwargs.get('is_admin', False)
-        self.places = []
-        self.reviews = []
-        self.password = None
-        password = kwargs.get('password')
-        if password:
-            self.hash_password(password)
+    first_name = db.Column(db.String(50), nullable=False)
+    last_name = db.Column(db.String(50), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)
+    password = db.Column(db.String(128), nullable=False)
 
-    def hash_password(self, password):
-        """hash le mot de passe avant de le poser dans la base de donnees"""
-        from app import bcrypt
-        self.password = bcrypt.generate_password_hash(password).decode('utf-8')
+    # Relations
+    places = db.relationship('Place', back_populates='owner', cascade="all, delete-orphan")
+    reviews = db.relationship('Review', back_populates='user', cascade="all, delete-orphan")
 
-    def verify_password(self, password):
-        """verifie si le mot de passe fourni correspond au mot de passe hache"""
-        from app import bcrypt
-        return bcrypt.check_password_hash(self.password, password)
-
-    @property
-    def first_name(self):
-        return self.__first_name
-
-    @first_name.setter
-    def first_name(self, value):
+    @validates('first_name')
+    def validate_first_name(self, key, value):
         if not isinstance(value, str):
             raise TypeError("First name must be a string")
-        super().is_max_length('First name', value, 50)
-        self.__first_name = value
+        if len(value) > 50:
+            raise ValueError("First name too long")
+        return value
 
-    @property
-    def last_name(self):
-        return self.__last_name
-
-    @last_name.setter
-    def last_name(self, value):
+    @validates('last_name')
+    def validate_last_name(self, key, value):
         if not isinstance(value, str):
             raise TypeError("Last name must be a string")
-        super().is_max_length('Last name', value, 50)
-        self.__last_name = value
+        if len(value) > 50:
+            raise ValueError("Last name too long")
+        return value
 
-    @property
-    def email(self):
-        return self.__email
-
-    @email.setter
-    def email(self, value):
+    @validates('email')
+    def validate_email(self, key, value):
         if not isinstance(value, str):
             raise TypeError("Email must be a string")
         if not re.match(r"[^@]+@[^@]+\.[^@]+", value):
             raise ValueError("Invalid email format")
-        if value in User.emails:
-            raise ValueError("Email already exists")
-        if hasattr(self, "_User__email"):
-            User.emails.discard(self.__email)
-        self.__email = value
-        User.emails.add(value)
+        return value
 
-    @property
-    def is_admin(self):
-        return self.__is_admin
-
-    @is_admin.setter
-    def is_admin(self, value):
+    @validates('is_admin')
+    def validate_is_admin(self, key, value):
         if not isinstance(value, bool):
-            raise TypeError("Is Admin must be a boolean")
-        self.__is_admin = value
+            raise TypeError("is_admin must be a boolean")
+        return value
 
-    def add_place(self, place):
-        """Ajoute un lieu associé à l'utilisateur"""
-        self.places.append(place)
-
-    def add_review(self, review):
-        """Ajoute un avis associé à l'utilisateur"""
-        self.reviews.append(review)
-
-    def delete_review(self, review):
-        """Supprime un avis de l'utilisateur"""
-        self.reviews.remove(review)
+    def hash_password(self, plain_password):
+        self.password = bcrypt.generate_password_hash(plain_password).decode('utf-8')
 
     def to_dict(self):
         return {
             'id': self.id,
             'first_name': self.first_name,
             'last_name': self.last_name,
-            'email': self.email
+            'email': self.email,
+            'is_admin': self.is_admin,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
+
