@@ -1,10 +1,11 @@
-from flask_jwt_extended import jwt_required, get_jwt_identity
+#!/usr/bin/python3
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt   # NEW
 from flask_restx import Namespace, Resource, fields
 from app.services import facade
 
 api = Namespace('places', description='Place operations')
 
-# Define the models for related entities
+# ---------- Models ----------
 amenity_model = api.model('PlaceAmenity', {
     'id': fields.String(description='Amenity ID'),
     'name': fields.String(description='Name of the amenity')
@@ -17,7 +18,6 @@ user_model = api.model('PlaceUser', {
     'email': fields.String(description='Email of the owner')
 })
 
-# Define the place model for input validation and documentation
 place_model = api.model('Place', {
     'title': fields.String(required=True, description='Title of the place'),
     'description': fields.String(description='Description of the place'),
@@ -26,9 +26,11 @@ place_model = api.model('Place', {
     'longitude': fields.Float(required=True, description='Longitude of the place'),
     'owner_id': fields.String(required=True, description='ID of the owner'),
     'owner': fields.Nested(user_model, description='Owner details'),
-    'amenities': fields.List(fields.String, required=True, description="List of amenities ID's")
+    'amenities': fields.List(fields.String, required=True,
+                             description="List of amenities ID's")
 })
 
+# ---------- Routes ----------
 @api.route('/')
 class PlaceList(Resource):
     @api.expect(place_model)
@@ -39,8 +41,7 @@ class PlaceList(Resource):
         """Register a new place"""
         place_data = api.payload
         current_user_id = get_jwt_identity()
-        place_data['owner_id'] = current_user_id 
-
+        place_data['owner_id'] = current_user_id
         place_data.setdefault('price', 0)
         place_data.setdefault('latitude', 0.0)
         place_data.setdefault('longitude', 0.0)
@@ -61,13 +62,10 @@ class PlaceList(Resource):
         """Retrieve a list of all places"""
         places = facade.get_all_places()
         return [
-        {
-            "id": place.id,
-            "title": place.title,
-            "price": place.price
-        }
-        for place in places
-    ], 200
+            {"id": place.id, "title": place.title, "price": place.price}
+            for place in places
+        ], 200
+
 
 @api.route('/<place_id>')
 class PlaceResource(Resource):
@@ -97,17 +95,23 @@ class PlaceResource(Resource):
         """Update a place's information"""
         current_user_id = get_jwt_identity()
         place = facade.get_place(place_id)
-        
+
         if not place:
             return {'error': 'Place not found'}, 404
-        if place.owner.id != current_user_id:
+
+        # --------- RBAC admin bypass ---------
+        claims   = get_jwt()                           # NEW
+        is_admin = claims.get('is_admin', False)       # NEW
+        if not is_admin and place.owner.id != current_user_id:   # MOD
             return {'error': 'Unauthorized action'}, 403
-        place_data = api.payload
+        # -------------------------------------
+
         try:
-            facade.update_place(place_id, place_data)
+            facade.update_place(place_id, api.payload)
             return {'message': 'Place updated successfully'}, 200
         except Exception as e:
             return {'error': str(e)}, 400
+
 
 @api.route('/<place_id>/amenities')
 class PlaceAmenities(Resource):
@@ -116,22 +120,23 @@ class PlaceAmenities(Resource):
     @api.response(404, 'Place not found')
     @api.response(400, 'Invalid input data')
     def post(self, place_id):
+        """Add amenities to a place"""
         amenities_data = api.payload
-        if not amenities_data or len(amenities_data) == 0:
+        if not amenities_data:
             return {'error': 'Invalid input data'}, 400
-        
+
         place = facade.get_place(place_id)
         if not place:
             return {'error': 'Place not found'}, 404
-        
+
         for amenity in amenities_data:
-            a = facade.get_amenity(amenity['id'])
-            if not a:
+            if not facade.get_amenity(amenity['id']):
                 return {'error': 'Invalid input data'}, 400
-        
+
         for amenity in amenities_data:
             place.add_amenity(amenity)
         return {'message': 'Amenities added successfully'}, 200
+
 
 @api.route('/<place_id>/reviews/')
 class PlaceReviewList(Resource):
@@ -143,4 +148,3 @@ class PlaceReviewList(Resource):
         if not place:
             return {'error': 'Place not found'}, 404
         return [review.to_dict() for review in place.reviews], 200
-    
