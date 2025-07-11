@@ -61,3 +61,10 @@ class User(BaseModel):
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
 
+    def set_password(self, plain_password):
+        """Set password with hashing (alias for hash_password)."""
+        self.password = bcrypt.generate_password_hash(plain_password).decode('utf-8')
+
+    def verify_password(self, plain_password):
+        """Verify hashed password."""
+        return bcrypt.check_password_hash(self.password, plain_password)
