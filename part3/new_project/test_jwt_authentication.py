@@ -13,6 +13,7 @@ class JWTAuthenticationTestCase(unittest.TestCase):
     def setUp(self):
         """Set up test context and database"""
         self.app = create_app(DevelopmentConfig)
+        self.app.config['TESTING'] = True
         self.client = self.app.test_client()
 
         with self.app.app_context():
@@ -25,7 +26,7 @@ class JWTAuthenticationTestCase(unittest.TestCase):
                 last_name="Doe",
                 email="john.doe@example.com"
             )
-            user.set_password("testpassword")  # hash automatiquement
+            user.hash_password("testpassword")  # méthode définie dans le modèle
             db.session.add(user)
             db.session.commit()
 
