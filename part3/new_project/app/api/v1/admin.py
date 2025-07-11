@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 #!/usr/bin/python3
-=======
->>>>>>> main
 from flask_restx import Namespace, Resource, fields
 from flask_jwt_extended import jwt_required, get_jwt
 from flask import request
@@ -9,10 +6,7 @@ from app.services import facade
 
 api = Namespace('admin', description='Admin operations')
 
-<<<<<<< HEAD
 # ---------- USER ----------
-=======
->>>>>>> main
 user_in = api.model('UserIn', {
     'email': fields.String(required=True),
     'first_name': fields.String,
@@ -21,10 +15,6 @@ user_in = api.model('UserIn', {
     'is_admin': fields.Boolean
 })
 
-<<<<<<< HEAD
-=======
-# -- CREATE USER --
->>>>>>> main
 @api.route('/users/')
 class AdminUserCreate(Resource):
     @api.expect(user_in)
@@ -38,10 +28,6 @@ class AdminUserCreate(Resource):
         except ValueError as e:
             return {'error': str(e)}, 400
 
-<<<<<<< HEAD
-=======
-# -- UPDATE USER --
->>>>>>> main
 @api.route('/users/<string:user_id>')
 class AdminUserModify(Resource):
     @jwt_required()
@@ -52,11 +38,12 @@ class AdminUserModify(Resource):
             user = facade.update_user(user_id, request.get_json())
             return user.to_dict(), 200
         except (KeyError, ValueError) as e:
-<<<<<<< HEAD
             return {'error': str(e)}, 400
 
-# ---------- AMENITY ----------  # NEW
-amenity_in = api.model('AmenityIn', {'name': fields.String(required=True)})
+# ---------- AMENITY ----------
+amenity_in = api.model('AmenityIn', {
+    'name': fields.String(required=True)
+})
 
 @api.route('/amenities/')
 class AdminAmenityCreate(Resource):
@@ -82,6 +69,3 @@ class AdminAmenityModify(Resource):
             return amenity.to_dict(), 200
         except (KeyError, ValueError) as e:
             return {'error': str(e)}, 400
-=======
-            return {'error': str(e)}, 400
->>>>>>> main
