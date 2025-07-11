@@ -1,85 +1,147 @@
-# HBnB API RESTful – Partie 3 : Backend Sécurisé et Intégration Base de Données
+# ✨ HBnB - Part 3 : Advanced API & Database Integration
 
-## 🚀 Présentation
+## 📌 Description
 
-Cette troisième étape du projet HBnB consiste à renforcer le backend en y intégrant :
-
-- Une authentification sécurisée basée sur JWT,
-- Une gestion fine des autorisations (utilisateurs et administrateurs),
-- Une persistance des données avec une base relationnelle (SQLite en dev, MySQL en production),
-- Une migration des opérations CRUD vers une vraie base,
-- La conception et la visualisation du schéma de base avec Mermaid.js.
-
-L’objectif est d’obtenir un backend sécurisé, robuste et prêt pour un usage réel en production.
+Bienvenue dans la **troisième partie** du projet **HBnB** !  
+Ici, l’objectif est de construire une **API RESTful sécurisée**, reliée à une **base de données SQL** via **SQLAlchemy**, tout en respectant les bonnes pratiques :  
+- 🔐 Authentification JWT  
+- 🧂 Hashing des mots de passe  
+- 🗂️ Repository Pattern  
+- 🧠 Séparation des responsabilités
 
 ---
 
-## 🎯 Objectifs clés
+## 🧱 Architecture du projet
 
-- **Authentification & Contrôle d’accès :**  
-  Mise en place d’un système JWT pour gérer l’accès sécurisé, avec des rôles utilisateur (admin vs utilisateur standard).
-
-- **Persistance en base relationnelle :**  
-  Transition d’un stockage temporaire en mémoire vers une base SQL via SQLAlchemy (SQLite local, MySQL prod).
-
-- **CRUD permanent :**  
-  Adaptation de toutes les opérations pour qu’elles interagissent avec la base de données.
-
-- **Modélisation & Visualisation :**  
-  Schéma relationnel modélisé et visualisé avec Mermaid.js pour une meilleure compréhension des relations.
-
-- **Validation des données :**  
-  Mise en place de validations et contraintes strictes pour garantir la cohérence des données.
-
----
-
-## 🌍 Contexte
-
-Les premières phases utilisaient un stockage volatile en mémoire, idéal pour du prototypage mais insuffisant pour un déploiement. Cette phase vous permettra de maîtriser :
-
-- L’intégration d’une base de données relationnelle dans un projet Flask,
-- La sécurisation d’une API via des tokens JWT,
-- La gestion des rôles et des droits d’accès.
-
-Ainsi, vous serez en mesure de déployer une API REST robuste et professionnelle.
+```plaintext
+part3/
+├── app/
+│   ├── __init__.py             🎯 Application Factory
+│   ├── config.py               🛠️ Configurations (Dev/Test/Prod)
+│   ├── extensions.py           🔌 Initialisation des extensions (db, jwt, bcrypt)
+│   ├── models/                 🧬 SQLAlchemy Models (User, Place, Review, Amenity…)
+│   ├── repositories/           🗂️ SQLAlchemy et InMemory Repositories
+│   ├── api/
+│   │   └── v1/                 🔐 Endpoints organisés par entité
+│   ├── facade.py               🧠 Façade métier
+│   ├── SQL_tables.sql          🧾 Script création DB
+│   ├── Insert_Initial_Data.sql 📥 Script données initiales
+├── tests/                      🧪 Tests
+```
 
 ---
 
-## 📚 Ressources recommandées
+## 🗃️ Fonctionnalités par tâche
 
-- [Flask-JWT-Extended Documentation](https://flask-jwt-extended.readthedocs.io/en/stable/)  
-- [SQLAlchemy ORM Documentation](https://docs.sqlalchemy.org/en/20/)  
-- [SQLite Documentation](https://www.sqlite.org/docs.html)  
-- [Flask Official Docs](https://flask.palletsprojects.com/en/latest/)  
-- [Mermaid.js Guide](https://mermaid-js.github.io/mermaid/#/)  
-- [OWASP Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)
+### ✅ 0. Application Factory  
+📦 Intègre `Config` dans `create_app()`  
+🔌 Initialise `db`, `bcrypt`, `jwt`  
+
+### ✅ 1. User + Password Hashing  
+🔐 Hash sécurisé avec `bcrypt`  
+🙅‍♂️ Mot de passe non retourné dans les réponses  
+🧾 Création via `POST /api/v1/users/`
+
+### ✅ 2. JWT Authentification  
+🪪 Auth via `POST /api/v1/auth/login`  
+📲 Retourne un token JWT  
+🔐 Protection des endpoints avec `@jwt_required`
+
+### ✅ 3. Endpoints utilisateur authentifié  
+🔏 Accès restreint pour :  
+🔄 Modifier ses infos  
+🏠 Créer / modifier ses places  
+📝 Rédiger une review (avec restrictions)
+
+### ✅ 4. Droits administrateur  
+👑 Admins peuvent :  
+👤 Créer/modifier n’importe quel utilisateur  
+🛠️ Gérer toutes les amenities  
+🔓 Bypasser les restrictions (ownership, review unique…)
+
+### ✅ 5. SQLAlchemy Repository  
+📀 Remplace l’ancienne persistence mémoire  
+🧩 Intégré à la `Facade`  
+🔁 Respect du `Repository Pattern`
+
+### ✅ 6. Mapping User SQLAlchemy  
+🧬 Mapping complet de `User` + `BaseModel`  
+🛠️ `UserRepository` fonctionnel  
+🔐 Hachage toujours actif
+
+### ✅ 7. Mapping Place, Review, Amenity  
+📦 Mapping des attributs (sans relations)  
+🧱 CRUD via les nouveaux Repositories
+
+### ✅ 8. Relations SQLAlchemy  
+🔗 Ajout des relations :  
+🧍 `User` ↔ `Place`  
+🏠 `Place` ↔ `Review`  
+💡 `Place` ↔ `Amenity` (N:N)
+
+### ✅ 9. Scripts SQL  
+📜 `SQL_tables.sql` : création des tables  
+📦 `Insert_Initial_Data.sql` : admin + données test  
+
+💡 Utilisation :
+```bash
+sqlite3 dev.db < SQL_tables.sql
+```
+
+### ✅ 10. Diagramme ER (Mermaid.js)  
+📊 Génération d’un diagramme visuel Mermaid  
+🧠 Représente toutes les entités et relations  
+📎 Intégrable directement dans la doc GitHub
 
 ---
 
-## 🗂 Organisation du projet et étapes
-
-### Plan de travail
-
-| Étape | Description                                                       | Points |
-|-------|------------------------------------------------------------------|--------|
-| 0     | Intégrer la configuration dans la factory Flask                  | 5      |
-| 1     | Ajouter le hashage des mots de passe dans le modèle User         | 10     |
-| 2     | Mettre en place l’authentification JWT                           | 10     |
-| 3     | Sécuriser les endpoints pour accès utilisateur authentifié       | 10     |
-| 4     | Restreindre certains accès aux administrateurs                   | 10     |
-| 5     | Implémenter le repository SQLAlchemy                              | 10     |
-| 6     | Mapper l’entité User avec SQLAlchemy                              | 10     |
-| 7     | Mapper Place, Review, Amenity                                     | 10     |
-| 8     | Définir les relations entre les entités                          | 10     |
-| 9     | Créer scripts SQL pour créer tables et données initiales         | 10     |
-| 10    | Générer les diagrammes ER avec Mermaid.js                        | 10     |
-
----
-
-## 🛠 Installation et lancement
-
-1. Cloner le dépôt et accéder au dossier part3 :
+## 🚀 Lancer l’application
 
 ```bash
-git clone https://github.com/tmlgde/holbertonschool-hbnb.git
-cd holbertonschool-hbnb/part3
+export FLASK_APP=app
+export FLASK_ENV=development
+flask run
+```
+
+---
+
+## 🔐 Auth avec JWT
+
+### 🔑 Endpoint de login :
+```http
+POST /api/v1/auth/login
+Body : { "email": "exemple@mail.com", "password": "mon_mdp" }
+```
+
+### Ensuite, inclure ce header dans les requêtes protégées :
+
+```http
+Authorization: Bearer <votre_token_jwt>
+```
+
+---
+
+## 🧪 Tests
+
+✔️ Couverture des fonctionnalités critiques :  
+- ✅ Connexion et création utilisateur  
+- ✅ Authentification et tokens  
+- ✅ Droits d’accès (admin vs user)  
+- ✅ Requêtes interdites (review double, lieu non possédé…)
+
+---
+
+## 📚 Ressources utiles
+
+- 📘 [Flask Application Factory](https://flask.palletsprojects.com/en/2.3.x/patterns/appfactories/)
+- 🧬 [SQLAlchemy ORM](https://docs.sqlalchemy.org/en/20/orm/)
+- 🔐 [JWT avec Flask](https://flask-jwt-extended.readthedocs.io/)
+- 🔑 [bcrypt pour Flask](https://flask-bcrypt.readthedocs.io/)
+- 📊 [Mermaid.js Diagram](https://mermaid.live)
+
+---
+
+## ✍️ Auteurs
+
+- 👨‍💻 Ilmi Veliu  
+- 👨‍💻 Tom Lagarde
