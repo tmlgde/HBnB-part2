@@ -1,4 +1,4 @@
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from flask_restx import Namespace, Resource, fields
 from app.services import facade
 
@@ -49,6 +49,8 @@ class ReviewList(Resource):
             return {'error': str(e)}, 400
 
     @api.response(200, 'List of reviews retrieved successfully')
+    @api.doc(security='Bearer Auth')
+    @jwt_required()
     def get(self):
         """Retrieve a list of all reviews"""
         return [review.to_dict() for review in facade.get_all_reviews()], 200
@@ -57,6 +59,8 @@ class ReviewList(Resource):
 class ReviewResource(Resource):
     @api.response(200, 'Review details retrieved successfully')
     @api.response(404, 'Review not found')
+    @jwt_required()
+    @api.doc(security='Bearer Auth')
     def get(self, review_id):
         """Get review details by ID"""
         review = facade.get_review(review_id)
@@ -70,6 +74,7 @@ class ReviewResource(Resource):
     @api.response(400, 'Invalid input data')
     @api.response(403, 'Unauthorized action')
     @jwt_required()
+    @api.doc(security='Bearer Auth')
     def put(self, review_id):
         """Update a review's information"""
         current_user_id = get_jwt_identity()
@@ -92,6 +97,7 @@ class ReviewResource(Resource):
     @api.response(404, 'Review not found')
     @api.response(403, 'Unauthorized action')
     @jwt_required()
+    @api.doc(security='Bearer Auth')
     def delete(self, review_id):
         """Delete a review"""
         current_user_id = get_jwt_identity()

@@ -1,4 +1,4 @@
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from flask_restx import Namespace, Resource, fields
 from app.services import facade
 
@@ -73,6 +73,8 @@ class PlaceList(Resource):
 class PlaceResource(Resource):
     @api.response(200, 'Place details retrieved successfully')
     @api.response(404, 'Place not found')
+    @jwt_required()
+    @api.doc(security='Bearer Auth')
     def get(self, place_id):
         """Get place details by ID"""
         place = facade.get_place(place_id)
@@ -93,6 +95,7 @@ class PlaceResource(Resource):
     @api.response(400, 'Invalid input data')
     @api.response(403, 'Unauthorized action')
     @jwt_required()
+    @api.doc(security='Bearer Auth')
     def put(self, place_id):
         """Update a place's information"""
         current_user_id = get_jwt_identity()

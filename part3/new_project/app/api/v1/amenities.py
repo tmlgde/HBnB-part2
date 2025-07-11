@@ -1,6 +1,6 @@
 from flask_restx import Namespace, Resource, fields
 from app.services import facade
-
+from flask_jwt_extended import jwt_required
 
 api = Namespace('amenities', description='Amenity operations')
 
@@ -38,6 +38,8 @@ class AmenityList(Resource):
 class AmenityResource(Resource):
     @api.response(200, 'Amenity details retrieved successfully')
     @api.response(404, 'Amenity not found')
+    @jwt_required()
+    @api.doc(security='Bearer Auth')
     def get(self, amenity_id):
         """Get amenity details by ID"""
         amenity = facade.get_amenity(amenity_id)
@@ -49,6 +51,8 @@ class AmenityResource(Resource):
     @api.response(200, 'Amenity updated successfully')
     @api.response(404, 'Amenity not found')
     @api.response(400, 'Invalid input data')
+    @jwt_required()
+    @api.doc(security='Bearer Auth')
     def put(self, amenity_id):
         amenity_data = api.payload
         amenity = facade.get_amenity(amenity_id)

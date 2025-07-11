@@ -16,11 +16,17 @@ class HBnBFacade:
         self.review_repo = ReviewRepository()
 
     # USER
-    def create_user(self, user_data, plain_password):
+    def create_user(self, user_data, plain_password=None):
         user = User(**user_data)
-        user.hash_password(plain_password)
+
+        if plain_password:  # Si password fourni, on le hash
+            user.hash_password(plain_password)
+        else:
+            user.password = None  # sinon on laisse vide
+
         self.user_repo.add(user)
         return user
+
 
     def get_users(self):
         return self.user_repo.get_all()

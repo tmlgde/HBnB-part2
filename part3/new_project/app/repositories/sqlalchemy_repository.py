@@ -17,6 +17,7 @@ class SQLAlchemyRepository(Repository, ABC):
         return self.model.query.all()
 
     def update(self, obj_id, data):
+        print(f"Update called with id={obj_id} and data={data}")
         obj = self.get(obj_id)
         if obj:
             for key, value in data.items():
