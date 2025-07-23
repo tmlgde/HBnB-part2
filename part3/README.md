@@ -88,10 +88,55 @@ part3/
 sqlite3 dev.db < SQL_tables.sql
 ```
 
-### ✅ 10. Diagramme ER (Mermaid.js)  
-📊 Génération d’un diagramme visuel Mermaid  
-🧠 Représente toutes les entités et relations  
-📎 Intégrable directement dans la doc GitHub
+---
+
+## ✅ 10. Diagramme ER (Mermaid.js)
+
+```mermaid
+erDiagram
+    USER {
+        uuid id
+        string first_name
+        string last_name
+        string email
+        string password
+        boolean is_admin
+    }
+
+    PLACE {
+        uuid id
+        string title
+        string description
+        float price
+        float latitude
+        float longitude
+        uuid owner_id
+    }
+
+    REVIEW {
+        uuid id
+        string text
+        int rating
+        uuid user_id
+        uuid place_id
+    }
+
+    AMENITY {
+        uuid id
+        string name
+    }
+
+    PLACE_AMENITY {
+        uuid place_id
+        uuid amenity_id
+    }
+
+    USER ||--o{ PLACE : owns
+    USER ||--o{ REVIEW : writes
+    PLACE ||--o{ REVIEW : has
+    PLACE ||--o{ PLACE_AMENITY : has
+    AMENITY ||--o{ PLACE_AMENITY : is_part_of
+```
 
 ---
 
